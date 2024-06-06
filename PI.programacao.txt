@@ -1,0 +1,88 @@
+/*
+* Curso de Engenharia de Software - UniEVANGÉLICA
+* Disciplina de Programação Web
+* Dev: [Seu Nome]
+* DATA: [Data]
+*/
+
+// Importando as dependências necessárias
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+// Inicializando o Express
+const app = express();
+app.use(bodyParser.json());
+
+// Conexão com o banco de dados MongoDB
+mongoose.connect('mongodb://localhost:27017/meuBancoDeDados', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'Erro de conexão com o MongoDB:'));
+db.once('open', function() {
+  console.log('Conectado ao MongoDB');
+});
+
+// Definindo o schema do modelo de usuário
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String
+});
+const User = mongoose.model('User', userSchema);
+
+// Definindo as rotas
+app.post('/signup', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = new User({ username, password });
+    await user.save();
+    res.status(201).send('Usuário criado com sucesso!');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erro ao criar usuário');
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username, password });
+    if (user) {
+      res.status(200).send('Login bem sucedido!');
+    } else {
+      res.status(401).send('Credenciais inválidas');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erro ao fazer login');
+  }
+});
+
+// Definindo o modelo de produto
+const productSchema = new mongoose.Schema({
+  name: String,
+  price: Number
+});
+const Product = mongoose.model('Product', productSchema);
+
+// Definindo as rotas para produtos
+// Implemente as rotas para CRUD de produtos da mesma forma como feito para usuários
+
+// Definindo o modelo de ordem de serviço
+const orderSchema = new mongoose.Schema({
+  customerName: String,
+  products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  totalPrice: Number
+});
+const Order = mongoose.model('Order', orderSchema);
+
+// Definindo as rotas para ordens de serviço
+// Implemente as rotas para CRUD de ordens de serviço da mesma forma como feito para usuários e produtos
+
+// Iniciando o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
